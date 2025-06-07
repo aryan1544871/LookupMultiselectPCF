@@ -14,6 +14,19 @@ const url: string = Xrm.Utility.getGlobalContext().getClientUrl();
  * @param relationshipName
  * @param primaryEntityId
  */
+
+function entityPluralization (entityName: string){
+  if(entityName.charAt(entityName.length -1 ) === "y" ){
+   return  entityName.slice(0,-1)+ "ie";
+  }
+  else if(entityName.charAt(entityName.length -1 ) === "s"){
+    return  entityName+ "e";
+  }
+  else{
+    return entityName;
+  }
+}
+
 export const Associate = (
   context: ComponentFramework.Context<IInputs>,
   selectedKey: string | number,
@@ -22,8 +35,10 @@ export const Associate = (
   relationshipName: string,
   primaryEntityId: string
 ) => {
-  let error: any =
-    "Issue while associating the record. Kindly check the configuration.";
+
+
+  primaryEntityType = entityPluralization(primaryEntityType);
+  relatedEntityType = entityPluralization (relatedEntityType);
   var association = {
     "@odata.id": url + `/api/data/v9.1/${relatedEntityType}s(${selectedKey})`,
   };
@@ -43,9 +58,7 @@ export const Associate = (
       req.onreadystatechange = null;
       if (this.status === 204 || this.status === 1223) {
         console.log("Associated");
-      } else {
-        context.navigation.openAlertDialog(error);
-      }
+      } 
     }
   };
   req.send(JSON.stringify(association));
@@ -65,8 +78,7 @@ export const DisAssociate = (
   relationshipName: string,
   primaryEntityId: string
 ) => {
-  let error: any =
-    "Issue while disassociating the record. Kindly check the configuration.";
+  primaryEntityType = entityPluralization(primaryEntityType);
   var req = new XMLHttpRequest();
   req.open(
     "DELETE",
@@ -83,9 +95,7 @@ export const DisAssociate = (
       req.onreadystatechange = null;
       if (this.status === 204 || this.status === 1223) {
         console.log("Disassociated");
-      } else {
-        context.navigation.openAlertDialog(error);
-      }
+      } 
     }
   };
   req.send();

@@ -10,9 +10,10 @@
 }
 
 .ms-Checkbox-checkbox {
-  border: 0px;
-  border-radius: 10px;
+  border: 0.1 px;
+  border-radius: .5 px;
 }
+
 
 .ms-Dropdown-container {
   width: 100%;
