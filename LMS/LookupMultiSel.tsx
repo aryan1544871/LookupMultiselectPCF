@@ -93,6 +93,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   const [associatedRecords, setAssociatedRecords] = React.useState<string[]>([]);
   const onChangeTriggered = React.useRef(false);
   const [searchText, setSearchText] = React.useState<string>("");
+  const onChangePrimaryFilterColumn = React.useRef(false);
 
   /**
    * Gets selected values from props and maintain using state
@@ -176,6 +177,15 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     if (onChangeTriggered.current) onChange(selectedValues);
   }, [selectedValues]);
 
+
+  React.useEffect(() => {
+    if (onChangePrimaryFilterColumn.current && primaryFilterColumn.length === 0 ) {
+      setSelectedValues([]); 
+    } else {
+      onChangePrimaryFilterColumn.current = true; // mark as mounted
+    }
+  }, [primaryFilterColumn]);
+  
   /**
    * Triggers on change of dropdown
    * @param ev Event of the dropdown
