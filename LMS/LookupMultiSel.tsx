@@ -68,9 +68,8 @@ export interface ILookupMultiSel {
   primaryEntityId: string;
   disabled: boolean;
   primaryEntityName: string;
-  primaryFilterColumn : string;
+  primaryFilterColumn :ComponentFramework.LookupValue[];
   mappedEntityAndColumnForFilter : string[];
-
 }
 
 export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
@@ -87,7 +86,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     disabled,
     primaryEntityName,
     primaryFilterColumn,
-    mappedEntityAndColumnForFilter
+    mappedEntityAndColumnForFilter,
   } = props;
   const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
   const [userOptions, setUserOptions] = React.useState<IDropdownOption[]>([]);
@@ -108,45 +107,39 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   React.useEffect(() => {
     let userOptionsList: IDropdownOption[] = [];
     let associatedRecordLists : string[] = [];
-    let associatedString = `?$expand=${relationshipName}($select=${ relatedPrimaryColumnsName[1]})&$filter=${primaryEntityName} eq ${primaryEntityId}`;
-    let primaryFilterColumnName  = primaryFilterColumn;
-    let mappedEntityAndColumnForFilterArray = mappedEntityAndColumnForFilter;
-    if (primaryFilterColumnName!= null && mappedEntityAndColumnForFilter != null){
-      let filterString = `?$select=_${primaryFilterColumnName}_value`;
-      context.webAPI
-      .retrieveRecord(primaryEntityType,primaryEntityId,filterString)
-      .then((response) => {
-        let filterGuid = response[`_${primaryFilterColumnName}_value`];
-        let filteredOptionsets : string[] = [];
-        if (filterGuid!= null){
-           context.webAPI
-            .retrieveMultipleRecords(mappedEntityAndColumnForFilterArray[0])
+    let associatedString = primaryEntityId? `?$expand=${relationshipName}($select=${ relatedPrimaryColumnsName[1]})&$filter=${primaryEntityName} eq ${primaryEntityId}`:null;
+    let primaryFilterColumnValue  = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
+    let formattedPrimaryFilterColumnValue = primaryFilterColumnValue?`${primaryFilterColumnValue.slice(0, 8)}-${primaryFilterColumnValue.slice(8, 12)}-${primaryFilterColumnValue.slice(12, 16)}-${primaryFilterColumnValue.slice(16, 20)}-${primaryFilterColumnValue.slice(20)}`:null;
+    if (mappedEntityAndColumnForFilter.length === 3){
+      let filteredOptionsets : string[] = [];
+      let filterGuid = formattedPrimaryFilterColumnValue;
+      if (filterGuid!= null){
+         context.webAPI
+          .retrieveMultipleRecords(mappedEntityAndColumnForFilter[0])
+          .then((response) => {
+            response.entities.forEach((element) => {
+            if(element[`_${mappedEntityAndColumnForFilter[1]}_value`] === filterGuid){
+               filteredOptionsets.push(
+                  element[`_${mappedEntityAndColumnForFilter[2]}_value`]
+              );
+            }
+            });
+            context.webAPI
+            .retrieveMultipleRecords(relatedEntityType)
             .then((response) => {
               response.entities.forEach((element) => {
-              if(element[`_${mappedEntityAndColumnForFilterArray[1]}_value`] === filterGuid){
-                 filteredOptionsets.push(
-                    element[`_${mappedEntityAndColumnForFilterArray[2]}_value`]
-                );
+              if(filteredOptionsets.includes(element[relatedPrimaryColumns[0]])){
+                  userOptionsList.push({
+                  key: element[relatedPrimaryColumns[0]],
+                  text: element[relatedPrimaryColumns[1]],
+                  data: { value: element[relatedPrimaryColumns[0]] },
+                });
               }
               });
-              context.webAPI
-              .retrieveMultipleRecords(relatedEntityType)
-              .then((response) => {
-                response.entities.forEach((element) => {
-                if(filteredOptionsets.includes(element[relatedPrimaryColumns[0]])){
-                    userOptionsList.push({
-                    key: element[relatedPrimaryColumns[0]],
-                    text: element[relatedPrimaryColumns[1]],
-                    data: { value: element[relatedPrimaryColumns[0]] },
-                  });
-                }
-                });
-                setUserOptions(userOptionsList);
-              })
+              setUserOptions(userOptionsList);
+            })
         })
-        }
       }
-      )
     }
     else{
       context.webAPI
@@ -162,19 +155,19 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
         setUserOptions(userOptionsList);
       })
     }
-    context.webAPI
-    .retrieveMultipleRecords(primaryEntityType,associatedString)
-    .then((response)=>{
-      response.entities.forEach((element) => {
-          associatedRecordLists.push(
-            element[relationshipName]
-          );
-        });
-        setAssociatedRecords(associatedRecordLists);
-    })
-    /* let userOptionsList = RetrieveMultiple(context, entityType, entityColumns);
-    setUserOptions(userOptionsList); */
-  }, []);
+    if(associatedString){
+      context.webAPI
+      .retrieveMultipleRecords(primaryEntityType,associatedString)
+      .then((response)=>{
+        response.entities.forEach((element) => {
+            associatedRecordLists.push(
+              element[relationshipName]
+            );
+          });
+          setAssociatedRecords(associatedRecordLists);
+      })
+    }
+  }, [primaryFilterColumn]);
 
   /**
    * Trigger onchange to update the property
