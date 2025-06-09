@@ -137,6 +137,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
                 });
               }
               });
+              userOptionsList.sort((a,b)=> a.text.localeCompare(b.text));
               setUserOptions(userOptionsList);
             })
         })
