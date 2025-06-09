@@ -142,6 +142,9 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
             })
         })
       }
+      else{
+        setUserOptions(userOptionsList);
+      }
     }
     else{
       context.webAPI
