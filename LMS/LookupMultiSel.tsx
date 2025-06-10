@@ -391,7 +391,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
         selectedKeys={selectedValues}
         calloutProps={{ directionalHintFixed: true }}
         onRenderTitle={onRenderTitle}
-        //dropdownWidth="auto"
+        dropdownWidth="auto"
         id="MainDropDown"
         placeholder="Look for records"
         onRenderCaretDown={onRenderCaretDown}
