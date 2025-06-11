@@ -14,11 +14,6 @@ import { FontSizes, ISearchBoxStyles, ITheme } from "@fluentui/react";
 //import { Sticky } from "@fluentui/react";
 import { Associate, DisAssociate } from "./WebApiOperations";
 
-function GetAssociatedItem (primaryEntityId : string, relationshipName : string){
-
-console.log(primaryEntityId);
-console.log(relationshipName);
-}
 
 const dropdownStyles: Partial<IDropdownStyles> = {
   dropdown: {
@@ -94,6 +89,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   const onChangeTriggered = React.useRef(false);
   const [searchText, setSearchText] = React.useState<string>("");
   const onChangePrimaryFilterColumn = React.useRef(false);
+  const prevFilterValue = React.useRef((primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid);
 
   /**
    * Gets selected values from props and maintain using state
@@ -183,8 +179,10 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
 
 
   React.useEffect(() => {
-    if (onChangePrimaryFilterColumn.current && primaryFilterColumn.length === 0 ) {
+    let currentFilterValue = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
+    if (onChangePrimaryFilterColumn.current &&  prevFilterValue.current !== currentFilterValue) {
       setSelectedValues([]); 
+      prevFilterValue.current = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
     } else {
       onChangePrimaryFilterColumn.current = true; // mark as mounted
     }
