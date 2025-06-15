@@ -153,6 +153,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
             data: { value: element[relatedPrimaryColumns[0]] },
           });
         });
+        userOptionsList.sort((a,b)=> a.text.localeCompare(b.text));
         setUserOptions(userOptionsList);
       })
     }
