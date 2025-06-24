@@ -115,9 +115,9 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
           .retrieveMultipleRecords(mappedEntityAndColumnForFilter[0])
           .then((response) => {
             response.entities.forEach((element) => {
-            if(element[`_${mappedEntityAndColumnForFilter[1]}_value`] === filterGuid){
+            if(element[mappedEntityAndColumnForFilter[1]] === filterGuid){
                filteredOptionsets.push(
-                  element[`_${mappedEntityAndColumnForFilter[2]}_value`]
+                  element[mappedEntityAndColumnForFilter[2]]
               );
             }
             });
