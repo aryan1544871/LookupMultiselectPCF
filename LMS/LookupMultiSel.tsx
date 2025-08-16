@@ -65,6 +65,8 @@ export interface ILookupMultiSel {
   primaryEntityName: string;
   primaryFilterColumn :ComponentFramework.LookupValue[];
   mappedEntityAndColumnForFilter : string[];
+  filterIdLogicalName: string;
+  filterJSON: string;
 }
 
 export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
@@ -82,6 +84,8 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     primaryEntityName,
     primaryFilterColumn,
     mappedEntityAndColumnForFilter,
+    filterIdLogicalName,
+    filterJSON
   } = props;
   const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
   const [userOptions, setUserOptions] = React.useState<IDropdownOption[]>([]);
@@ -107,6 +111,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     let associatedString = primaryEntityId? `?$expand=${relationshipName}($select=${ relatedPrimaryColumnsName[1]})&$filter=${primaryEntityName} eq ${primaryEntityId}`:null;
     let primaryFilterColumnValue  = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
     let formattedPrimaryFilterColumnValue = primaryFilterColumnValue?`${primaryFilterColumnValue.slice(0, 8)}-${primaryFilterColumnValue.slice(8, 12)}-${primaryFilterColumnValue.slice(12, 16)}-${primaryFilterColumnValue.slice(16, 20)}-${primaryFilterColumnValue.slice(20)}`:null;
+    // filtering from mapped entity and column
     if (mappedEntityAndColumnForFilter.length === 3){
       let filteredOptionsets : string[] = [];
       let filterGuid = formattedPrimaryFilterColumnValue;
@@ -141,6 +146,47 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
       else{
         setUserOptions(userOptionsList);
       }
+    }
+    //filtering from JSON
+    else if (filterJSON && filterJSON !== "" && filterIdLogicalName && filterIdLogicalName !== "")
+    {
+      let data;
+      let filteredOptionsets : string[] = [];
+      try {
+        data = JSON.parse(filterJSON);
+        data?.tabs?.forEach((tab: any) => {
+          tab?.sections?.forEach((section: any) => {
+            section?.fields?.forEach((field: any) => {
+             if (field.id === filterIdLogicalName){
+              field.shows.forEach((option: any) => {
+                filteredOptionsets.push(option);
+              });
+            } 
+            });
+          })
+        })
+       } 
+      catch (error) {
+          alert("Error in JSON: "+ error);
+          return;
+      }
+      if (filteredOptionsets.length > 0){
+        context.webAPI
+          .retrieveMultipleRecords(relatedEntityType)
+          .then((response) => {
+            response.entities.forEach((element) => {
+              if(filteredOptionsets.includes(element[relatedPrimaryColumns[0]])){
+                userOptionsList.push({
+                  key: element[relatedPrimaryColumns[0]],
+                  text: element[relatedPrimaryColumns[1]],
+                  data: { value: element[relatedPrimaryColumns[0]] },
+                });
+              }
+            });
+            userOptionsList.sort((a,b)=> a.text.localeCompare(b.text));
+            setUserOptions(userOptionsList);
+          })
+      } 
     }
     else{
       context.webAPI

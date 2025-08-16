@@ -27,6 +27,8 @@
     <property name="primaryEntityName" display-name-key="Primary Entity GUID Name" description-key="Primary Entity GUID Name" of-type="SingleLine.Text" usage="input" required="true" />
     <property name="primaryFilterColumn" display-name-key="Primary Filter Column " description-key="Primary Filter Column" usage="bound" of-type="Lookup.Simple" required="false"/>
     <property name="mappedEntityAndColumnForFilter" display-name-key="Mapped Entity and Column For Filtering" description-key="This Column should be in format. Ex: Mapped Entity,Primary filter column of mapped entity,Related filter column of mapped entity " usage="input" of-type="SingleLine.Text" required="false"/>
+    <property name="filterIdLogicalName" display-name-key="Filter ID Logical Name" description-key="Filter ID present in JSON: Mainly logical name of column where pcf is applied" usage="input" of-type="SingleLine.Text" required="false"/>
+    <property name="filterJSON" display-name-key="Filter JSON" description-key="Enter the JSON for filtering : Must be of format tabs-sections-fields-id,shows" usage="input" of-type="Multiple" required="false"/>
     <property name="isDisabled" display-name-key=" Disable PCF" description-key="This column is used to make PCF column readonly" usage="bound" of-type="TwoOptions" required="false"/>
 
 
