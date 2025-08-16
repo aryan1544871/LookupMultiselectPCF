@@ -51,11 +51,9 @@ export class LMS implements ComponentFramework.ReactControl<IInputs, IOutputs> {
       primaryEntityType: context.parameters.primaryEntityType.raw!,
       relationshipName: context.parameters.relationshipName.raw!,
       primaryEntityId: context.parameters.primaryEntityId.raw!,
-      disabled: false,
-       /* context.parameters.primaryEntityId.raw! == null
+      disabled: context.parameters.isDisabled?.raw! == true
           ? true
-          : context.mode.isControlDisabled,
-          */
+          : false,
       primaryEntityName: context.parameters.primaryEntityName.raw!,
       primaryFilterColumn :  context.parameters.primaryFilterColumn.raw!,
       mappedEntityAndColumnForFilter : context.parameters.mappedEntityAndColumnForFilter.raw!?context.parameters.mappedEntityAndColumnForFilter.raw!.split(",").map((value) => value.trim()) : [],
@@ -77,7 +75,8 @@ export class LMS implements ComponentFramework.ReactControl<IInputs, IOutputs> {
       multiSelectedValues: this.selectedOptions.toString(),
     };
   }
-
+  
+  
   /**
    * Called when the control is to be removed from the DOM tree. Controls should use this call for cleanup.
    * i.e. cancelling any pending remote calls, removing listeners, etc.

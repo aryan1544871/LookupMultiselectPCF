@@ -346,7 +346,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     //let url: string = `main.aspx?pagetype=entityrecord&etn=${entityType}&id=`;
     selectedList.forEach((element) => {
       option.push(
-        <span>
+        <span style={{ fontWeight: disabled ? "bold" :"normal" }}>
           {element.text}
           <IconButton
             iconProps={{ iconName: "Cancel" }}
@@ -354,6 +354,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
             onClick={(ev) => onChangeDropDownOrOnIconClick(ev, element, 1)}
             className="IconButtonClass"
             styles={buttonStyles}
+            disabled={disabled}
           ></IconButton>
         </span>
       );
