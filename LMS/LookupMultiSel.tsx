@@ -94,6 +94,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   const [searchText, setSearchText] = React.useState<string>("");
   const onChangePrimaryFilterColumn = React.useRef(false);
   const prevFilterValue = React.useRef((primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid);
+   const prevFilterJSONValue = React.useRef(filterJSON as any);
 
   /**
    * Gets selected values from props and maintain using state
@@ -215,7 +216,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
           setAssociatedRecords(associatedRecordLists);
       })
     }
-  }, [primaryFilterColumn]);
+  }, [primaryFilterColumn,filterJSON ]);
 
   /**
    * Trigger onchange to update the property
@@ -227,13 +228,14 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
 
   React.useEffect(() => {
     let currentFilterValue = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
-    if (onChangePrimaryFilterColumn.current &&  prevFilterValue.current !== currentFilterValue) {
+    if (onChangePrimaryFilterColumn.current &&  (prevFilterValue.current !== currentFilterValue || prevFilterJSONValue.current !== filterJSON)) {
       setSelectedValues([]); 
       prevFilterValue.current = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
+      prevFilterJSONValue.current = filterJSON;
     } else {
       onChangePrimaryFilterColumn.current = true; // mark as mounted
     }
-  }, [primaryFilterColumn]);
+  }, [primaryFilterColumn, filterJSON]);
   
   /**
    * Triggers on change of dropdown
