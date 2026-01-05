@@ -67,6 +67,7 @@ export interface ILookupMultiSel {
   mappedEntityAndColumnForFilter : string[];
   filterIdLogicalName: string;
   filterJSON: string;
+  isReadOnly: boolean;
 }
 
 export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
@@ -85,7 +86,8 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     primaryFilterColumn,
     mappedEntityAndColumnForFilter,
     filterIdLogicalName,
-    filterJSON
+    filterJSON,
+    isReadOnly
   } = props;
   const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
   const [userOptions, setUserOptions] = React.useState<IDropdownOption[]>([]);
@@ -394,7 +396,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     //let url: string = `main.aspx?pagetype=entityrecord&etn=${entityType}&id=`;
     selectedList.forEach((element) => {
       option.push(
-        <span style={{ fontWeight: disabled ? "bold" :"normal" }}>
+        <span style={{ fontWeight: isReadOnly ? "bold" :"normal" }}>
           {element.text}
           <IconButton
             iconProps={{ iconName: "Cancel" }}
@@ -402,7 +404,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
             onClick={(ev) => onChangeDropDownOrOnIconClick(ev, element, 1)}
             className="IconButtonClass"
             styles={buttonStyles}
-            disabled={disabled}
+            disabled={isReadOnly}
           ></IconButton>
         </span>
       );
@@ -445,7 +447,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
         onRenderCaretDown={onRenderCaretDown}
         onRenderOption={onRenderOption}
         onDismiss={() => setSearchText("")}
-        disabled={disabled}
+        disabled={isReadOnly}
       />
       {/* </Stack> */}
     </>
