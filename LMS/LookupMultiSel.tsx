@@ -96,7 +96,6 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   const [searchText, setSearchText] = React.useState<string>("");
   const onChangePrimaryFilterColumn = React.useRef(false);
   const prevFilterValue = React.useRef((primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid);
-   const prevFilterJSONValue = React.useRef(filterJSON as any);
 
   /**
    * Gets selected values from props and maintain using state
@@ -218,7 +217,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
           setAssociatedRecords(associatedRecordLists);
       })
     }
-  }, [primaryFilterColumn,filterJSON ]);
+  }, [primaryFilterColumn]);
 
   /**
    * Trigger onchange to update the property
@@ -230,14 +229,13 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
 
   React.useEffect(() => {
     let currentFilterValue = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
-    if (onChangePrimaryFilterColumn.current &&  (prevFilterValue.current !== currentFilterValue || prevFilterJSONValue.current !== filterJSON)) {
+    if (onChangePrimaryFilterColumn.current &&  prevFilterValue.current !== currentFilterValue) {
       setSelectedValues([]); 
       prevFilterValue.current = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
-      prevFilterJSONValue.current = filterJSON;
     } else {
       onChangePrimaryFilterColumn.current = true; // mark as mounted
     }
-  }, [primaryFilterColumn, filterJSON]);
+  }, [primaryFilterColumn]);
   
   /**
    * Triggers on change of dropdown
@@ -411,6 +409,52 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
     });
     return <div>{option}</div>;
   };
+
+  React.useEffect(() => {
+    const fetchMissingOptions = async () => {
+      if (selectedValues && selectedValues.length > 0) {
+        const missingKeys = selectedValues.filter(
+          (key) => !userOptions.some((option) => option.key === key)
+        );
+        if (missingKeys.length > 0) {
+          const newOptions = await Promise.all(
+            missingKeys.map(async (key) => {
+              let textValue = key;
+              if (
+                context &&
+                relatedEntityType &&
+                relatedPrimaryColumns[0] &&
+                relatedPrimaryColumns[1]
+              ) {
+                try {
+                  const record = await context.webAPI.retrieveRecord(
+                    relatedEntityType,
+                    key,
+                    `?$select=${relatedPrimaryColumns[1]}`
+                  );
+                  textValue = record[relatedPrimaryColumns[1]] || key;
+                } catch (e) {
+                  console.error(e);
+                  textValue = key;
+                }
+              }
+              return {
+                key: key,
+                text: textValue,
+                data: { value: key },
+              };
+            })
+          );
+          setUserOptions((prevValues) => {
+            const existingKeys = new Set(prevValues.map(opt => opt.key));
+            const filteredNewOptions = newOptions.filter(opt => !existingKeys.has(opt.key));
+            return [...prevValues, ...filteredNewOptions];
+          });
+        }
+      }
+    };
+    fetchMissingOptions();
+  }, [selectedValues, userOptions]);
 
   return (
     <>
