@@ -91,11 +91,11 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   } = props;
   const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
   const [userOptions, setUserOptions] = React.useState<IDropdownOption[]>([]);
-  const [associatedRecords, setAssociatedRecords] = React.useState<string[]>([]);
   const onChangeTriggered = React.useRef(false);
   const [searchText, setSearchText] = React.useState<string>("");
   const onChangePrimaryFilterColumn = React.useRef(false);
   const prevFilterValue = React.useRef((primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid);
+  const isInitialLoad = React.useRef(true);
 
   /**
    * Gets selected values from props and maintain using state
@@ -109,8 +109,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
    */
   React.useEffect(() => {
     let userOptionsList: IDropdownOption[] = [];
-    let associatedRecordLists : string[] = [];
-    let associatedString = primaryEntityId? `?$expand=${relationshipName}($select=${ relatedPrimaryColumnsName[1]})&$filter=${primaryEntityName} eq ${primaryEntityId}`:null;
+   
     let primaryFilterColumnValue  = (primaryFilterColumn?primaryFilterColumn[0]:null as any)?.Id?._rawGuid;
     let formattedPrimaryFilterColumnValue = primaryFilterColumnValue?`${primaryFilterColumnValue.slice(0, 8)}-${primaryFilterColumnValue.slice(8, 12)}-${primaryFilterColumnValue.slice(12, 16)}-${primaryFilterColumnValue.slice(16, 20)}-${primaryFilterColumnValue.slice(20)}`:null;
     // filtering from mapped entity and column
@@ -205,18 +204,7 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
         setUserOptions(userOptionsList);
       })
     }
-    if(associatedString){
-      context.webAPI
-      .retrieveMultipleRecords(primaryEntityType,associatedString)
-      .then((response)=>{
-        response.entities.forEach((element) => {
-            associatedRecordLists.push(
-              element[relationshipName]
-            );
-          });
-          setAssociatedRecords(associatedRecordLists);
-      })
-    }
+   
   }, [primaryFilterColumn]);
 
   /**
@@ -288,32 +276,6 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
    * @returns Icon
    */
   const onRenderCaretDown = () => {
-    let associatedItems: any[] = [];
-    let associatedItemsArray :any[] = [];
-    let recordsToBeDissociated: any[] = [];
-    if (selectedValues.length === 0){
-
-       associatedRecords.forEach(n=>{
-        for (var i=0 ; i < n.length; i++ ){
-          associatedItems.push(n[i])
-            }
-           })
-        associatedItems.forEach((element) => {
-          associatedItemsArray.push(element[relatedPrimaryColumnsName[0]])
-        });
-        associatedItemsArray.forEach((element)=>{
-                recordsToBeDissociated.push(element)
-            })
-        recordsToBeDissociated.forEach((key)=>{
-            DisAssociate(
-                    context,
-                    key,
-                    primaryEntityType,
-                    relationshipName,
-                    primaryEntityId
-                  );
-          })
-    }
     return <Icon iconName="Search"></Icon>;
   };
 
@@ -336,7 +298,63 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
       <>{option?.text}</>
     );
   };
-
+ 
+  React.useEffect(() => {
+  
+    let associatedRecordLists : any[] = [];
+    let associatedItems: any[] = [];
+    let associatedString = primaryEntityId? `?$expand=${relationshipName}($select=${ relatedPrimaryColumnsName[1]})&$filter=${primaryEntityName} eq ${primaryEntityId}`:null;
+    let recordsToBeAssociated: any[] = [];
+    let recordsToBeDissociated: any[] = [];
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+     if(associatedString){
+      context.webAPI
+      .retrieveMultipleRecords(primaryEntityType,associatedString)
+      .then((response)=>{
+        response.entities.forEach((element) => {
+            associatedRecordLists.push(
+              element[relationshipName]
+            );
+          });
+          associatedRecordLists.flat().forEach((element: any) => {
+            associatedItems.push(element[relatedPrimaryColumnsName[0]]);
+          });
+          selectedValues.forEach((element)=>{
+            if(!associatedItems.includes(element)){
+              recordsToBeAssociated.push(element)
+            }
+          })
+          associatedItems.forEach((element)=>{
+            if(!selectedValues.includes(element)){
+              recordsToBeDissociated.push(element)
+            }
+          })
+          recordsToBeAssociated.forEach((key) =>{
+            Associate(
+                    context,
+                    key,
+                    primaryEntityType,
+                    relatedEntityType,
+                    relationshipName,
+                    primaryEntityId
+                  );
+          } )
+          recordsToBeDissociated.forEach((key)=>{
+            DisAssociate(
+                    context,
+                    key,
+                    primaryEntityType,
+                    relationshipName,
+                    primaryEntityId
+                  );
+          })
+          })
+    }
+   
+  }, [selectedValues]);
   /**
    * Render custom title
    * @param options Selected option from dropdown
@@ -345,53 +363,6 @@ export const LookupMultiSel = React.memo((props: ILookupMultiSel) => {
   const onRenderTitle = (options: any) => {
     let option: any[] = [];
     let selectedList: IDropdownOption[] = options;
-    let selectedListArray: any[] =[];
-    let associatedItems: any[] = [];
-    let associatedItemsArray :any[] = [];
-    let recordsToBeAssociated: any[] = [];
-    let recordsToBeDissociated: any[] = [];
-    selectedList.forEach((element)=>{
-      selectedListArray.push(element.key)
-    });
-
-    associatedRecords.forEach(n=>{
-      for (var i=0 ; i < n.length; i++ ){
-        associatedItems.push(n[i])
-      }
-    })
-    associatedItems.forEach((element) => {
-      associatedItemsArray.push(element[relatedPrimaryColumnsName[0]])
-    });
-    selectedListArray.forEach((element)=>{
-      if(!associatedItemsArray.includes(element)){
-        recordsToBeAssociated.push(element)
-      }
-    })
-     associatedItemsArray.forEach((element)=>{
-      if(!selectedListArray.includes(element)){
-        recordsToBeDissociated.push(element)
-      }
-    })
-    recordsToBeAssociated.forEach((key) =>{
-      Associate(
-              context,
-              key,
-              primaryEntityType,
-              relatedEntityType,
-              relationshipName,
-              primaryEntityId
-            );
-    } )
-    recordsToBeDissociated.forEach((key)=>{
-      DisAssociate(
-              context,
-              key,
-              primaryEntityType,
-              relationshipName,
-              primaryEntityId
-            );
-    })
-    //let url: string = `main.aspx?pagetype=entityrecord&etn=${entityType}&id=`;
     selectedList.forEach((element) => {
       option.push(
         <span style={{ fontWeight: isReadOnly ? "bold" :"normal" }}>
